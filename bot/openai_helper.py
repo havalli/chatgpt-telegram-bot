@@ -382,7 +382,7 @@ class OpenAIHelper:
         try:
             with open(filename, "rb") as audio:
                 prompt_text = self.config['whisper_prompt']
-                result = await self.client.audio.transcriptions.create(model="gpt-4o-transcribe", file=audio, response_format="text", prompt=prompt_text)
+                result = await self.client.audio.transcriptions.create(model="gpt-4o-transcribe", file=audio, prompt=prompt_text)
                 return result.text
         except Exception as e:
             logging.exception(e)
