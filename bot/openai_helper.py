@@ -344,7 +344,7 @@ class OpenAIHelper:
 
             max_tokens_str = 'max_completion_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
             common_args = {
-                'model': self.config['model'] if not self.conversations_vision[chat_id] else self.config['vision_model'],
+                'model': self.config['search_model'],
                 'input': query,
                 #'messages': self.conversations[chat_id],
                 'temperature': self.config['temperature'],
