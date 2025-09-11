@@ -352,7 +352,7 @@ class OpenAIHelper:
                     "type": "web_search",
                     "user_location": {
                         "type": "approximate",
-                        "country": "E",
+                        "country": "DE",
                         "city": "Berlin",
                         "region": "NRW"
                     }
