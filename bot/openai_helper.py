@@ -396,13 +396,13 @@ class OpenAIHelper:
             max_tokens_str = 'max_completion_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
             common_args = {
                 'model': self.config['model'] if not self.conversations_vision[chat_id] else self.config['vision_model'],
-                'messages': self.conversations[chat_id],
+                #'messages': self.conversations[chat_id],
                 'temperature': self.config['temperature'],
                 'tools' : [{"type": "web_search_preview"}],
-                'n': self.config['n_choices'],
+                #'n': self.config['n_choices'],
                 max_tokens_str: self.config['max_tokens'],
-                'presence_penalty': self.config['presence_penalty'],
-                'frequency_penalty': self.config['frequency_penalty'],
+                #'presence_penalty': self.config['presence_penalty'],
+                #'frequency_penalty': self.config['frequency_penalty'],
                 'stream': stream
             }
 
