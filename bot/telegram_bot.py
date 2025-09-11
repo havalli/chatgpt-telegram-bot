@@ -42,7 +42,8 @@ class ChatGPTTelegramBot:
             BotCommand(command='help', description=localized_text('help_description', bot_language)),
             BotCommand(command='reset', description=localized_text('reset_description', bot_language)),
             BotCommand(command='stats', description=localized_text('stats_description', bot_language)),
-            BotCommand(command='resend', description=localized_text('resend_description', bot_language))
+            BotCommand(command='resend', description=localized_text('resend_description', bot_language)),
+            BotCommand(command='search', description=localized_text('search_description', bot_language))
         ]
         # If imaging is enabled, add the "image" command to the list
         if self.config.get('enable_image_generation', False):
@@ -663,7 +664,7 @@ class ChatGPTTelegramBot:
         if is_group_chat(update):
             trigger_keyword = self.config['group_trigger_keyword']
 
-            if prompt.lower().startswith(trigger_keyword.lower()) or websearch:
+            if prompt.lower().startswith(trigger_keyword.lower()):
                 if prompt.lower().startswith(trigger_keyword.lower()):
                     prompt = prompt[len(trigger_keyword):].strip()
 

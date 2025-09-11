@@ -26,6 +26,8 @@ def message_text(message: Message) -> str:
                           key=(lambda item: item[0].offset)):
         message_txt = message_txt.replace(text, '').strip()
 
+    
+    message_txt = message_txt.replace('such:', '').strip()
     return message_txt if len(message_txt) > 0 else ''
 
 
