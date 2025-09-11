@@ -262,6 +262,7 @@ class OpenAIHelper:
             yield response, '0'
             return
 
+        logging.info(response)
         answer = ''
         async for chunk in response:
             if len(chunk.choices) == 0:
