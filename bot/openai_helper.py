@@ -374,7 +374,7 @@ class OpenAIHelper:
 
             self.last_updated[chat_id] = datetime.datetime.now()
 
-            self.__add_to_history(chat_id, role="user", content=query)
+            #self.__add_to_history(chat_id, role="user", content=query)
 
             # Summarize the chat history if it's too long to avoid excessive token usage
             token_count = self.__count_tokens(self.conversations[chat_id])
@@ -396,6 +396,7 @@ class OpenAIHelper:
             max_tokens_str = 'max_completion_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
             common_args = {
                 'model': self.config['model'] if not self.conversations_vision[chat_id] else self.config['vision_model'],
+                'input': query,
                 #'messages': self.conversations[chat_id],
                 'temperature': self.config['temperature'],
                 'tools' : [{"type": "web_search_preview"}],
