@@ -659,11 +659,12 @@ class ChatGPTTelegramBot:
         user_id = update.message.from_user.id
         prompt = message_text(update.message)
         self.last_message[chat_id] = prompt
+        websearch = update.message.text.lower().startswith('/search')
 
         if is_group_chat(update):
             trigger_keyword = self.config['group_trigger_keyword']
 
-            if prompt.lower().startswith(trigger_keyword.lower()) or update.message.text.lower().startswith('/chat'):
+            if prompt.lower().startswith(trigger_keyword.lower()) or websearch:
                 if prompt.lower().startswith(trigger_keyword.lower()):
                     prompt = prompt[len(trigger_keyword):].strip()
 
@@ -687,7 +688,10 @@ class ChatGPTTelegramBot:
                     message_thread_id=get_thread_id(update)
                 )
 
-                stream_response = self.openai.get_chat_response_stream(chat_id=chat_id, query=prompt)
+                if(websearch):
+                    stream_response = self.openai.get_web_search_response_stream(chat_id=chat_id, query=prompt)
+                else:
+                    stream_response = self.openai.get_chat_response_stream(chat_id=chat_id, query=prompt)
                 i = 0
                 prev = ''
                 sent_message = None
