@@ -287,7 +287,6 @@ class OpenAIHelper:
                 'model': self.config['model'] if not self.conversations_vision[chat_id] else self.config['vision_model'],
                 'messages': self.conversations[chat_id],
                 'temperature': self.config['temperature'],
-                'tools' : [{"type": "web_search_preview"}],
                 'n': self.config['n_choices'],
                 max_tokens_str: self.config['max_tokens'],
                 'presence_penalty': self.config['presence_penalty'],
