@@ -105,7 +105,7 @@
         "image_description":"Erzeuge ein Bild aus einer Aufforderung (z.B. /image Katze)",
         "tts_description":"Erzeuge Sprache aus Text (z.B. /tts mein Haus)",
         "stats_description":"Zeige aktuelle Benutzungstatistiken",
-        "resend_description":"Wiederhole das Senden der letzten Nachricht",,
+        "resend_description":"Wiederhole das Senden der letzten Nachricht",
         "search_description":"Durchsucht das Web",
         "chat_description":"Schreibe mit dem Bot!",
         "disallowed":"Sorry, du darfst diesen Bot nicht verwenden. Den Quellcode findest du hier https://github.com/n3d1117/chatgpt-telegram-bot",
