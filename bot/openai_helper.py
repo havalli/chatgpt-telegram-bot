@@ -349,12 +349,12 @@ class OpenAIHelper:
                 #'messages': self.conversations[chat_id],
                 'temperature': self.config['temperature'],
                 'tools' : [{
-                    "type": "web_search_preview",
+                    "type": "web_search",
                     "user_location": {
-                        "country": "DE",
-                        "city": "Moers",
-                        "region": "NRW",
-                        "timezone": "Europe/Berlin"
+                        "type": "approximate",
+                        "country": "E",
+                        "city": "Berlin",
+                        "region": "NRW"
                     }
                 }],
                 #'n': self.config['n_choices'],
