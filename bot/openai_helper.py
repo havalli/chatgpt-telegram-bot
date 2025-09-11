@@ -257,11 +257,10 @@ class OpenAIHelper:
         """
         plugins_used = ()
         response = await self.__common_get_web_search_response(chat_id, query, stream=True)
-        if self.config['enable_functions'] and not self.conversations_vision[chat_id]:
-            response, plugins_used = await self.__handle_function_call(chat_id, response, stream=True)
-            if is_direct_result(response):
-                yield response, '0'
-                return
+        
+        if is_direct_result(response):
+            yield response, '0'
+            return
 
         answer = ''
         async for chunk in response:
