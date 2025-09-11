@@ -825,24 +825,6 @@ class ChatGPTTelegramBot:
         prompt = message_text(update.message)
         self.last_message[chat_id] = prompt
 
-        if is_group_chat(update):
-            trigger_keyword = self.config['group_trigger_keyword']
-
-            if prompt.lower().startswith(trigger_keyword.lower()):
-                if prompt.lower().startswith(trigger_keyword.lower()):
-                    prompt = prompt[len(trigger_keyword):].strip()
-
-                if update.message.reply_to_message and \
-                        update.message.reply_to_message.text and \
-                        update.message.reply_to_message.from_user.id != context.bot.id:
-                    prompt = f'"{update.message.reply_to_message.text}" {prompt}'
-            else:
-                if update.message.reply_to_message and update.message.reply_to_message.from_user.id == context.bot.id:
-                    logging.info('Message is a reply to the bot, allowing...')
-                else:
-                    logging.warning('Message does not start with trigger keyword, ignoring...')
-                    return
-
         try:
             total_tokens = 0
 
