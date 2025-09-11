@@ -176,10 +176,11 @@ class OpenAIHelper:
         """
         plugins_used = ()
         response = await self.__common_get_web_search_response(chat_id, query)
-        if self.config['enable_functions'] and not self.conversations_vision[chat_id]:
-            response, plugins_used = await self.__handle_function_call(chat_id, response)
-            if is_direct_result(response):
-                return response, '0'
+        
+        logging.info(f'response: {response}')
+
+        if is_direct_result(response):
+            return response, '0'
 
         answer = ''
 
