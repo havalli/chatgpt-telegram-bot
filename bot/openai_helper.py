@@ -166,6 +166,49 @@ class OpenAIHelper:
             answer += f"\n\n---\n🔌 {', '.join(plugin_names)}"
 
         return answer, response.usage.total_tokens
+    
+    async def get_web_search_response(self, chat_id: int, query: str) -> tuple[str, str]:
+        """
+        Gets a full response from the GPT model.
+        :param chat_id: The chat ID
+        :param query: The query to send to the model
+        :return: The answer from the model and the number of tokens used
+        """
+        plugins_used = ()
+        response = await self.__common_get_web_search_response(chat_id, query)
+        if self.config['enable_functions'] and not self.conversations_vision[chat_id]:
+            response, plugins_used = await self.__handle_function_call(chat_id, response)
+            if is_direct_result(response):
+                return response, '0'
+
+        answer = ''
+
+        if len(response.choices) > 1 and self.config['n_choices'] > 1:
+            for index, choice in enumerate(response.choices):
+                content = choice.message.content.strip()
+                if index == 0:
+                    self.__add_to_history(chat_id, role="assistant", content=content)
+                answer += f'{index + 1}\u20e3\n'
+                answer += content
+                answer += '\n\n'
+        else:
+            answer = response.choices[0].message.content.strip()
+            self.__add_to_history(chat_id, role="assistant", content=answer)
+
+        bot_language = self.config['bot_language']
+        show_plugins_used = len(plugins_used) > 0 and self.config['show_plugins_used']
+        plugin_names = tuple(self.plugin_manager.get_plugin_source_name(plugin) for plugin in plugins_used)
+        if self.config['show_usage']:
+            answer += "\n\n---\n" \
+                      f"💰 {str(response.usage.total_tokens)} {localized_text('stats_tokens', bot_language)}" \
+                      f" ({str(response.usage.prompt_tokens)} {localized_text('prompt', bot_language)}," \
+                      f" {str(response.usage.completion_tokens)} {localized_text('completion', bot_language)})"
+            if show_plugins_used:
+                answer += f"\n🔌 {', '.join(plugin_names)}"
+        elif show_plugins_used:
+            answer += f"\n\n---\n🔌 {', '.join(plugin_names)}"
+
+        return answer, response.usage.total_tokens
 
     async def get_chat_response_stream(self, chat_id: int, query: str):
         """
