@@ -262,9 +262,9 @@ class OpenAIHelper:
             yield response, '0'
             return
 
-        logging.info(response)
         answer = ''
         async for chunk in response:
+            logging.info(f'chunk: {chunk}')
             if len(chunk.choices) == 0:
                 continue
             delta = chunk.choices[0].delta
