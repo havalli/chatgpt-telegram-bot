@@ -659,7 +659,6 @@ class ChatGPTTelegramBot:
         user_id = update.message.from_user.id
         prompt = message_text(update.message)
         self.last_message[chat_id] = prompt
-        websearch = update.message.text.lower().startswith('/search')
 
         if is_group_chat(update):
             trigger_keyword = self.config['group_trigger_keyword']
@@ -688,10 +687,7 @@ class ChatGPTTelegramBot:
                     message_thread_id=get_thread_id(update)
                 )
 
-                if(websearch):
-                    stream_response = self.openai.get_web_search_response_stream(chat_id=chat_id, query=prompt)
-                else:
-                    stream_response = self.openai.get_chat_response_stream(chat_id=chat_id, query=prompt)
+                stream_response = self.openai.get_chat_response_stream(chat_id=chat_id, query=prompt)
                 i = 0
                 prev = ''
                 sent_message = None
@@ -800,6 +796,87 @@ class ChatGPTTelegramBot:
                                 raise exception
 
                 await wrap_with_indicator(update, context, _reply, constants.ChatAction.TYPING)
+
+            add_chat_request_to_usage_tracker(self.usage, self.config, user_id, total_tokens)
+
+        except Exception as e:
+            logging.exception(e)
+            await update.effective_message.reply_text(
+                message_thread_id=get_thread_id(update),
+                reply_to_message_id=get_reply_to_message_id(self.config, update),
+                text=f"{localized_text('chat_fail', self.config['bot_language'])} {str(e)}",
+                parse_mode=constants.ParseMode.MARKDOWN
+            )
+
+    async def web_search(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """
+        React to incoming web search and respond accordingly.
+        """
+        if update.edited_message or not update.message or update.message.via_bot:
+            return
+
+        if not await self.check_allowed_and_within_budget(update, context):
+            return
+
+        logging.info(
+            f'New search request received from user {update.message.from_user.name} (id: {update.message.from_user.id}): {update.message.text}')
+        chat_id = update.effective_chat.id
+        user_id = update.message.from_user.id
+        prompt = message_text(update.message)
+        self.last_message[chat_id] = prompt
+
+        if is_group_chat(update):
+            trigger_keyword = self.config['group_trigger_keyword']
+
+            if prompt.lower().startswith(trigger_keyword.lower()):
+                if prompt.lower().startswith(trigger_keyword.lower()):
+                    prompt = prompt[len(trigger_keyword):].strip()
+
+                if update.message.reply_to_message and \
+                        update.message.reply_to_message.text and \
+                        update.message.reply_to_message.from_user.id != context.bot.id:
+                    prompt = f'"{update.message.reply_to_message.text}" {prompt}'
+            else:
+                if update.message.reply_to_message and update.message.reply_to_message.from_user.id == context.bot.id:
+                    logging.info('Message is a reply to the bot, allowing...')
+                else:
+                    logging.warning('Message does not start with trigger keyword, ignoring...')
+                    return
+
+        try:
+            total_tokens = 0
+
+            async def _reply():
+                nonlocal total_tokens
+                response, total_tokens = await self.openai.get_web_search_response(chat_id=chat_id, query=prompt)
+
+                if is_direct_result(response):
+                    return await handle_direct_result(self.config, update, response)
+
+                # Split into chunks of 4096 characters (Telegram's message limit)
+                chunks = split_into_chunks(response)
+
+                for index, chunk in enumerate(chunks):
+                    try:
+                        await update.effective_message.reply_text(
+                            message_thread_id=get_thread_id(update),
+                            reply_to_message_id=get_reply_to_message_id(self.config,
+                                                                        update) if index == 0 else None,
+                            text=chunk,
+                            parse_mode=constants.ParseMode.MARKDOWN
+                        )
+                    except Exception:
+                        try:
+                            await update.effective_message.reply_text(
+                                message_thread_id=get_thread_id(update),
+                                reply_to_message_id=get_reply_to_message_id(self.config,
+                                                                            update) if index == 0 else None,
+                                text=chunk
+                            )
+                        except Exception as exception:
+                            raise exception
+
+            await wrap_with_indicator(update, context, _reply, constants.ChatAction.TYPING)
 
             add_chat_request_to_usage_tracker(self.usage, self.config, user_id, total_tokens)
 
@@ -1066,7 +1143,7 @@ class ChatGPTTelegramBot:
         application.add_handler(CommandHandler('start', self.help))
         application.add_handler(CommandHandler('stats', self.stats))
         application.add_handler(CommandHandler('resend', self.resend))
-        application.add_handler(CommandHandler('search', self.prompt))
+        application.add_handler(CommandHandler('search', self.web_search))
         application.add_handler(CommandHandler(
             'chat', self.prompt, filters=filters.ChatType.GROUP | filters.ChatType.SUPERGROUP)
         )

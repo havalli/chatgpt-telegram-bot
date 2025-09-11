@@ -248,44 +248,6 @@ class OpenAIHelper:
 
         yield answer, tokens_used
 
-    async def get_web_search_response_stream(self, chat_id: int, query: str):
-        """
-        Stream response from the GPT model.
-        :param chat_id: The chat ID
-        :param query: The query to send to the model
-        :return: The answer from the model and the number of tokens used, or 'not_finished'
-        """
-        plugins_used = ()
-        response = await self.__common_get_web_search_response(chat_id, query, stream=True)
-        
-        if is_direct_result(response):
-            yield response, '0'
-            return
-
-        answer = ''
-        async for chunk in response:
-            logging.info(f'chunk: {chunk}')
-            if len(chunk.choices) == 0:
-                continue
-            delta = chunk.choices[0].delta
-            if delta.content:
-                answer += delta.content
-                yield answer, 'not_finished'
-        answer = answer.strip()
-        self.__add_to_history(chat_id, role="assistant", content=answer)
-        tokens_used = str(self.__count_tokens(self.conversations[chat_id]))
-
-        show_plugins_used = len(plugins_used) > 0 and self.config['show_plugins_used']
-        plugin_names = tuple(self.plugin_manager.get_plugin_source_name(plugin) for plugin in plugins_used)
-        if self.config['show_usage']:
-            answer += f"\n\n---\n💰 {tokens_used} {localized_text('stats_tokens', self.config['bot_language'])}"
-            if show_plugins_used:
-                answer += f"\n🔌 {', '.join(plugin_names)}"
-        elif show_plugins_used:
-            answer += f"\n\n---\n🔌 {', '.join(plugin_names)}"
-
-        yield answer, tokens_used
-
     @retry(
         reraise=True,
         retry=retry_if_exception_type(openai.RateLimitError),
@@ -360,7 +322,7 @@ class OpenAIHelper:
         wait=wait_fixed(20),
         stop=stop_after_attempt(3)
     )
-    async def __common_get_web_search_response(self, chat_id: int, query: str, stream=False):
+    async def __common_get_web_search_response(self, chat_id: int, query: str):
         """
         Request a response from the GPT model.
         :param chat_id: The chat ID
@@ -404,7 +366,6 @@ class OpenAIHelper:
                 #max_tokens_str: self.config['max_tokens'],
                 #'presence_penalty': self.config['presence_penalty'],
                 #'frequency_penalty': self.config['frequency_penalty'],
-                'stream': stream
             }
 
             if self.config['enable_functions'] and not self.conversations_vision[chat_id]:
