@@ -176,8 +176,6 @@ class OpenAIHelper:
         """
         plugins_used = ()
         response = await self.__common_get_web_search_response(chat_id, query)
-        
-        logging.info(f'response: {response}')
 
         if is_direct_result(response):
             return response, '0'
