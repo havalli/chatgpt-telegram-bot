@@ -553,7 +553,7 @@ class OpenAIHelper:
                 'messages': self.conversations[chat_id][:-1] + [message],
                 'temperature': self.config['temperature'],
                 'n': 1, # several choices is not implemented yet
-                'max_tokens': self.config['vision_max_tokens'],
+                'max_completion_tokens': self.config['vision_max_tokens'],
                 'presence_penalty': self.config['presence_penalty'],
                 'frequency_penalty': self.config['frequency_penalty'],
                 'stream': stream
