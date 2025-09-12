@@ -724,7 +724,7 @@ class OpenAIHelper:
         response = await self.client.chat.completions.create(
             model=self.config['model'],
             messages=messages,
-            temperature=1 if self.config['model'] in O_MODELS else 0.4
+            temperature=1
         )
         return response.choices[0].message.content
 
