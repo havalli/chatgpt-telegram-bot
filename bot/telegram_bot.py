@@ -472,9 +472,10 @@ class ChatGPTTelegramBot:
                    (prompt is not None and not prompt.lower().startswith(trigger_keyword.lower())):
                     logging.info('Vision coming from group chat with wrong keyword, ignoring...')
                     return
+                else:
+                    prompt = prompt.replace(self.config['group_trigger_keyword'], '').strip()                
         
         image = update.message.effective_attachment[-1]
-        
 
         async def _execute():
             bot_language = self.config['bot_language']
@@ -518,6 +519,8 @@ class ChatGPTTelegramBot:
             user_id = update.message.from_user.id
             if user_id not in self.usage:
                 self.usage[user_id] = UsageTracker(user_id, update.message.from_user.name)
+
+            total_tokens = 0
 
             if self.config['stream']:
 

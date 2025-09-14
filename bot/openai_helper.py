@@ -212,11 +212,8 @@ class OpenAIHelper:
 
         answer = ''
         async for chunk in response:
-            if len(chunk.choices) == 0:
-                continue
-            delta = chunk.choices[0].delta
-            if delta.content:
-                answer += delta.content
+            if chunk.type == 'response.output_text.delta' and chunk.delta:
+                answer += chunk.delta
                 yield answer, 'not_finished'
         answer = answer.strip()
         self.__add_to_history(chat_id, role="assistant", content=answer)
@@ -272,15 +269,16 @@ class OpenAIHelper:
                     logging.warning(f'Error while summarising chat history: {str(e)}. Popping elements instead...')
                     self.conversations[chat_id] = self.conversations[chat_id][-self.config['max_history_size']:]
 
-            max_tokens_str = 'max_completion_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
+            max_tokens_str = 'max_output_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
             common_args = {
                 'model': self.config['model'] if not self.conversations_vision[chat_id] else self.config['vision_model'],
-                'messages': self.conversations[chat_id],
+                'input': self.conversations[chat_id],
                 'temperature': self.config['temperature'],
-                'n': self.config['n_choices'],
+                #'n': self.config['n_choices'],
+                'reasoning' : {"effort": "low"},
                 max_tokens_str: self.config['max_tokens'],
-                'presence_penalty': self.config['presence_penalty'],
-                'frequency_penalty': self.config['frequency_penalty'],
+                #'presence_penalty': self.config['presence_penalty'],
+                #'frequency_penalty': self.config['frequency_penalty'],
                 'stream': stream
             }
 
@@ -290,7 +288,7 @@ class OpenAIHelper:
                     common_args['functions'] = self.plugin_manager.get_functions_specs()
                     common_args['function_call'] = 'auto'
 
-            return await self.client.chat.completions.create(**common_args)
+            return await self.client.responses.create(**common_args)
 
         except openai.RateLimitError as e:
             raise e
@@ -340,7 +338,7 @@ class OpenAIHelper:
                     logging.warning(f'Error while summarising chat history: {str(e)}. Popping elements instead...')
                     self.conversations[chat_id] = self.conversations[chat_id][-self.config['max_history_size']:]
 
-            max_tokens_str = 'max_completion_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
+            #max_tokens_str = 'max_completion_tokens' if self.config['model'] in O_MODELS or self.config['model'] in GPT_5_MODELS else 'max_tokens'
             common_args = {
                 'model': self.config['search_model'],
                 'input': query,
