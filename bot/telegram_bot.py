@@ -1137,8 +1137,7 @@ class ChatGPTTelegramBot:
             filters.PHOTO | filters.Document.IMAGE,
             self.vision))
         application.add_handler(MessageHandler(
-            filters.AUDIO | filters.VOICE | filters.Document.AUDIO |
-            filters.VIDEO | filters.VIDEO_NOTE | filters.Document.VIDEO,
+            filters.AUDIO | filters.VOICE | filters.Document.AUDIO,
             self.transcribe))
         application.add_handler(MessageHandler(filters.TEXT & (~filters.COMMAND), self.prompt))
         application.add_handler(InlineQueryHandler(self.inline_query, chat_types=[
