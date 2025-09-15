@@ -546,12 +546,12 @@ class OpenAIHelper:
 
             common_args = {
                 'model': self.config['vision_model'],
-                'messages': self.conversations[chat_id][:-1] + [message],
+                'input': self.conversations[chat_id][:-1] + [message],
                 'temperature': self.config['temperature'],
-                'n': 1, # several choices is not implemented yet
-                'max_completion_tokens': self.config['vision_max_tokens'],
-                'presence_penalty': self.config['presence_penalty'],
-                'frequency_penalty': self.config['frequency_penalty'],
+                #'n': 1, # several choices is not implemented yet
+                'max_output_tokens': self.config['vision_max_tokens'],
+                #'presence_penalty': self.config['presence_penalty'],
+                #'frequency_penalty': self.config['frequency_penalty'],
                 'stream': stream
             }
 
@@ -564,7 +564,7 @@ class OpenAIHelper:
             #         common_args['functions'] = self.plugin_manager.get_functions_specs()
             #         common_args['function_call'] = 'auto'
             
-            return await self.client.chat.completions.create(**common_args)
+            return await self.client.responses.create(**common_args)
 
         except openai.RateLimitError as e:
             raise e
@@ -634,8 +634,12 @@ class OpenAIHelper:
         image = encode_image(fileobj)
         prompt = self.config['vision_prompt'] if prompt is None else prompt
 
-        content = [{'type':'text', 'text':prompt}, {'type':'image_url', \
-                    'image_url': {'url':image, 'detail':self.config['vision_detail'] } }]
+
+
+        content = [
+            { 'type': 'input_text', 'text': prompt }, 
+            { 'type':'input_image', 'image_url': image, 'detail':self.config['vision_detail'] }
+        ]
 
         response = await self.__common_get_chat_response_vision(chat_id, content, stream=True)
 
@@ -649,13 +653,11 @@ class OpenAIHelper:
 
         answer = ''
         async for chunk in response:
-            if len(chunk.choices) == 0:
-                continue
-            delta = chunk.choices[0].delta
-            if delta.content:
-                answer += delta.content
+            if chunk.type == 'response.output_text.delta' and chunk.delta:
+                answer += chunk.delta
                 yield answer, 'not_finished'
         answer = answer.strip()
+        
         self.__add_to_history(chat_id, role="assistant", content=answer)
         tokens_used = str(self.__count_tokens(self.conversations[chat_id]))
 
@@ -781,8 +783,8 @@ class OpenAIHelper:
                         num_tokens += len(encoding.encode(value))
                     else:
                         for message1 in value:
-                            if message1['type'] == 'image_url':
-                                image = decode_image(message1['image_url']['url'])
+                            if message1['type'] == 'input_image':
+                                image = decode_image(message1['image_url'])
                                 num_tokens += self.__count_tokens_vision(image)
                             else:
                                 num_tokens += len(encoding.encode(message1['text']))
